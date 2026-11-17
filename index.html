@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Raio-X de Avaliações</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: graphics desk for a restaurant owner — the finding first, then what to do.
+   IDEA: a kitchen order ticket turned into a diagnosis: reviews in, plan out.
+   PICTURE: the working tool itself — pasted reviews beside a diverging bar chart of what customers praise vs. complain about.
+   COLOUR and TYPE: eggplant band, saffron accent, tomato for complaints, basil for praise; Archivo 800 + Archivo.
+   LAYOUT: tool on top (input left, diagnosis right), then plan, replies, table, and how it works. */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#130b17);--ink:light-dark(#1b1320,#f3edf5);--mut:light-dark(#62566a,#b6a9bd);
+--band:#2a1433;--bandInk:#fbf4ff;--sa:#f6b81a;--neg:light-dark(#d63a22,#ff6d55);--pos:light-dark(#1d8a5a,#43c78b);--neu:light-dark(#8b8290,#a59cab);
+--line:light-dark(#e7e0ea,#33273a);--card:light-dark(#faf7fb,#1c1221);--paper:light-dark(#fffdf6,#1a1120)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Archivo",system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(28px,4vw,56px) max(5vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+header.band{background:var(--band);color:var(--bandInk);padding-bottom:clamp(22px,3vw,36px)}
+h1{font-size:clamp(32px,5vw,50px);line-height:1.05;font-weight:800;margin:0 0 10px;text-wrap:balance}
+h1 span{color:var(--sa)}
+.lead{max-width:68ch;margin:0;font-size:17px;color:#e6d8ec}
+.by{margin-top:14px;font-size:14px;color:#cdb9d6}
+h2{font-size:clamp(22px,2.6vw,28px);line-height:1.15;margin:0 0 6px;font-weight:800;text-wrap:balance}
+h3{font-size:17px;margin:0 0 8px;font-weight:700}
+.sub{color:var(--mut);margin:0 0 18px;font-size:15px}
+.tool{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:28px;align-items:start}
+.ticket{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px;position:relative}
+.ticket:before{content:"";position:absolute;left:0;right:0;top:-1px;height:8px;background:radial-gradient(circle at 6px -2px,var(--bg) 5px,transparent 6px) 0 0/12px 8px repeat-x}
+label{font-weight:700;font-size:15px;display:block;margin-bottom:6px}
+.hint{font-size:13px;color:var(--mut);margin:0 0 8px}
+textarea{width:100%;height:340px;resize:vertical;font:15px/1.45 "Archivo",sans-serif;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:8px;padding:10px}
+textarea:focus,button:focus-visible,select:focus-visible{outline:3px solid var(--sa);outline-offset:2px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+button{font:700 15px "Archivo",sans-serif;min-height:44px;padding:0 16px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button.go{background:var(--sa);border-color:var(--sa);color:#2a1433}
+button:disabled{opacity:.55;cursor:not-allowed}
+.status{font-size:14px;color:var(--mut);margin-top:10px;min-height:22px}
+.status.err{color:var(--neg)}
+.tag{display:inline-block;font-size:13px;padding:2px 10px;border-radius:99px;background:var(--card);border:1px solid var(--line);color:var(--mut)}
+.finding{font-size:clamp(24px,3vw,34px);line-height:1.12;font-weight:800;margin:8px 0 16px;text-wrap:balance}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:22px}
+.kpi{border-top:3px solid var(--ink);padding-top:8px}
+.kpi b{display:block;font-size:clamp(24px,3vw,32px);line-height:1.1;font-weight:800;white-space:nowrap}
+.kpi span{font-size:13px;color:var(--mut)}
+.kpi.neg{border-color:var(--neg)}.kpi.neg b{color:var(--neg)}
+.legend{display:flex;gap:16px;font-size:13px;color:var(--mut);margin-bottom:8px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.div{display:grid;gap:6px}
+.drow{display:grid;grid-template-columns:minmax(0,1fr) 150px minmax(0,1fr);align-items:center;gap:8px;background:none;border:0;padding:4px 0;min-height:36px;border-radius:6px;text-align:center;font-weight:500}
+.drow:hover,.drow.on{background:var(--card)}
+.drow .l{font-size:14px;line-height:1.2}
+.bar{height:20px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700}
+.bar.n{justify-content:flex-end}.bar.p{justify-content:flex-start}
+.bar i{display:block;height:100%;border-radius:3px}
+.bar.n i{background:var(--neg)}.bar.p i{background:var(--pos)}
+.grid2{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:28px}
+.plan{list-style:none;margin:0;padding:0;counter-reset:a}
+.plan li{counter-increment:a;display:grid;grid-template-columns:34px minmax(0,1fr);gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+.plan li:before{content:counter(a);font-weight:800;font-size:22px;color:var(--sa);line-height:1.1}
+.plan p{margin:2px 0 6px;color:var(--mut);font-size:14px}
+.pill{font-size:12px;padding:1px 8px;border-radius:99px;border:1px solid var(--line);margin-right:4px;white-space:nowrap}
+.pill.hi{background:var(--sa);border-color:var(--sa);color:#2a1433}
+.reply{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:var(--card)}
+.reply q{display:block;font-size:14px;color:var(--mut);margin-bottom:8px}
+.reply q:before,.reply q:after{content:""}
+.reply p{margin:0 0 8px}
+.reply button{min-height:36px;font-size:14px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+select{font:15px "Archivo",sans-serif;min-height:44px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:13px;color:var(--mut);font-weight:700}
+td.n{text-align:right;white-space:nowrap}
+.s{font-weight:700;white-space:nowrap}.s.pos{color:var(--pos)}.s.neg{color:var(--neg)}.s.neu{color:var(--neu)}
+.t{font-size:12px;white-space:nowrap;margin:0 4px 2px 0;display:inline-block}.t.m{color:var(--neg)}.t.p{color:var(--pos)}
+.u{font-size:12px;font-weight:800;color:var(--neg)}
+.how{background:var(--card)}
+.steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:18px 0 22px}
+.step{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;position:relative}
+.step b{display:block;font-size:15px;margin-bottom:4px}
+.step span{font-size:14px;color:var(--mut)}
+.step.ai{border-color:var(--sa);box-shadow:inset 0 3px 0 var(--sa)}
+.notes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.notes p,.notes li{font-size:15px;color:var(--mut)}
+.notes ul{padding-left:18px;margin:0}
+details{margin-top:18px}summary{cursor:pointer;font-weight:700;min-height:44px;display:flex;align-items:center}
+pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;font-size:13px;white-space:pre-wrap}
+footer{font-size:14px;color:var(--mut)}
+.scroll{overflow-x:auto}
+@media(max-width:980px){.tool,.grid2{grid-template-columns:minmax(0,1fr)}.steps{grid-template-columns:repeat(2,minmax(0,1fr))}.notes{grid-template-columns:minmax(0,1fr)}textarea{height:220px}}
+@media(max-width:600px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.drow{grid-template-columns:minmax(0,1fr) 96px minmax(0,1fr)}.drow .l{font-size:13px}.steps{grid-template-columns:minmax(0,1fr)}
+table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;white-space:normal;color:var(--mut)}.stack td:empty{display:none}}
+@media(prefers-reduced-motion:no-preference){.bar i{transition:width .5s ease}}
+</style>
+<script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
+</head>
+<body>
+<header class="band"><div class="wrap">
+  <h1>Raio-X de <span>Avaliações</span></h1>
+  <p class="lead">Um restaurante de delivery recebe dezenas de avaliações por semana, e ler, separar por assunto e responder toma horas do dono. Aqui ele cola as avaliações e, em segundos, a IA mostra o que mais derruba a nota, o que fazer primeiro e um rascunho de resposta para os casos urgentes.</p>
+  <div class="by">Projeto de portfólio de Pedro Antônio Rosa de Souza · construído com IA generativa (Claude)</div>
+</div></header>
+
+<main>
+<section class="band"><div class="wrap tool">
+  <div class="ticket">
+    <label for="inp">Avaliações dos clientes</label>
+    <p class="hint">Uma por linha. Opcional: nota antes do texto, como “4 | Muito bom”. Até 80 avaliações.</p>
+    <textarea id="inp" spellcheck="false"></textarea>
+    <div class="btns">
+      <button class="go" id="run" disabled>Analisar com IA</button>
+      <button id="demo">Ver exemplo</button>
+      <button id="clr">Limpar</button>
+    </div>
+    <div class="status" id="st" role="status"></div>
+  </div>
+  <div id="out">
+    <span class="tag" id="src">Exemplo com dados fictícios · análise pré-calculada</span>
+    <div class="finding" id="finding"></div>
+    <div class="kpis" id="kpis"></div>
+    <h3>O que os clientes elogiam e reclamam</h3>
+    <div class="legend"><span><i style="background:var(--neg)"></i>Reclamações</span><span><i style="background:var(--pos)"></i>Elogios</span><span>Clique num tema para filtrar a tabela</span></div>
+    <div class="div" id="chart"></div>
+  </div>
+</div></section>
+
+<section class="band" style="padding-top:0"><div class="wrap grid2">
+  <div>
+    <h2>Plano de ação</h2>
+    <p class="sub">Priorizado por impacto e esforço, a partir dos números acima.</p>
+    <ol class="plan" id="plan"></ol>
+  </div>
+  <div>
+    <h2>Respostas sugeridas</h2>
+    <p class="sub">Para as avaliações marcadas como urgentes. O dono revisa antes de publicar.</p>
+    <div id="replies"></div>
+  </div>
+</div></section>
+
+<section class="band" style="padding-top:0"><div class="wrap">
+  <h2>Avaliações classificadas</h2>
+  <div class="filters">
+    <select id="fs" aria-label="Filtrar por sentimento"><option value="">Todos os sentimentos</option><option value="neg">Negativas</option><option value="neu">Neutras</option><option value="pos">Positivas</option></select>
+    <select id="ft" aria-label="Filtrar por tema"><option value="">Todos os temas</option></select>
+    <span class="hint" id="cnt" style="margin:0"></span>
+  </div>
+  <div class="scroll"><table class="stack"><thead><tr><th>#</th><th>Nota</th><th>Avaliação</th><th>Sentimento</th><th>Temas</th></tr></thead><tbody id="tb"></tbody></table></div>
+</div></section>
+
+<section class="band how"><div class="wrap">
+  <h2>Como funciona</h2>
+  <p class="sub">A IA faz o que é linguagem; o código faz o que é conta. Assim os números do painel são exatos e auditáveis.</p>
+  <div class="steps">
+    <div class="step"><b>1. Entrada</b><span>Texto colado, uma avaliação por linha; nota opcional.</span></div>
+    <div class="step ai"><b>2. IA classifica</b><span>Sentimento, temas de uma lista fixa e urgência, em JSON.</span></div>
+    <div class="step"><b>3. Código valida e conta</b><span>Descarta temas fora da lista e calcula KPIs e o gráfico.</span></div>
+    <div class="step ai"><b>4. IA recomenda</b><span>Recebe só os números agregados e devolve plano e respostas.</span></div>
+    <div class="step"><b>5. Pessoa revisa</b><span>Nada é publicado sem o dono ler e aprovar.</span></div>
+  </div>
+  <div class="notes">
+    <div><h3>Decisões de projeto</h3><ul>
+      <li>Temas fechados (7) para que a análise seja comparável semana a semana.</li>
+      <li>Duas chamadas de IA separadas: classificar e recomendar. Erro numa não contamina a outra.</li>
+      <li>O título do painel é gerado pelo código a partir das contagens, não pela IA.</li></ul></div>
+    <div><h3>Limitações</h3><ul>
+      <li>Ironia e avaliações muito curtas podem ser mal classificadas: a tabela deixa conferir uma a uma.</li>
+      <li>Respostas sugeridas são rascunhos; prometer reembolso depende da política da plataforma.</li>
+      <li>Não envie nomes, telefones ou endereços de clientes (LGPD).</li></ul></div>
+    <div><h3>Próximos passos</h3><ul>
+      <li>Buscar avaliações automaticamente e rodar toda segunda-feira (n8n + planilha).</li>
+      <li>Comparar semanas e alertar quando um tema dispara.</li>
+      <li>Medir a qualidade da classificação com 100 avaliações rotuladas à mão.</li></ul></div>
+  </div>
+  <details><summary>Ver os prompts usados</summary><pre id="prompts"></pre></details>
+</div></section>
+</main>
+<footer class="band"><div class="wrap">Raio-X de Avaliações · Pedro Antônio Rosa de Souza · Os dados de exemplo são fictícios (restaurante “Cantina Bella Massa”).</div></footer>
+
+<script>
+{
+const TEMAS=["Tempo de entrega","Temperatura","Sabor e qualidade","Embalagem","Pedido correto","Porção e preço","Atendimento"];
+const SL={pos:"Positiva",neu:"Neutra",neg:"Negativa"};
+const EX=`5 | Massa no ponto e molho maravilhoso. Chegou quentinho, voltarei a pedir!
+2 | Demorou quase 1h20 pra chegar e a lasanha veio morna.
+4 | Muito saboroso, só achei a porção pequena pelo preço.
+1 | Pedi nhoque e veio espaguete. Ninguém respondeu no chat.
+5 | Melhor carbonara da região, embalagem caprichada.
+2 | O molho vazou todo na sacola. Embalagem precisa melhorar.
+3 | Gostoso, mas chegou 40 minutos depois do previsto.
+5 | Entrega rápida e comida quente. Nota 10.
+1 | Faltou o refrigerante e a sobremesa que paguei. Quero reembolso.
+4 | Lasanha muito boa, chegou dentro do prazo.
+2 | Atrasou mais de uma hora, a massa chegou empapada.
+5 | Porção generosa, dá pra duas pessoas. Ótimo custo-benefício.
+3 | Sabor ok, nada demais. Esperava mais pelo preço.
+2 | Fettuccine frio e sem sal. Decepcionante.
+5 | Sempre peço aqui, nunca falhou. Molho de tomate caseiro de verdade.
+1 | Esperei 1h30 e cancelaram meu pedido sem avisar.
+4 | Bem embalado e saboroso, só demorou um pouco.
+2 | Veio sem os talheres e sem o queijo ralado que pedi.
+5 | Responderam rapidinho quando pedi pra tirar a cebola. Atenciosos!
+3 | A massa veio fria, mas o sabor compensou.
+2 | Pote de molho chegou aberto, sujou tudo.
+5 | Ravioli espetacular, chegou quente e no horário.
+2 | Muito caro pra quantidade. Porção de criança.
+4 | Gostei bastante, mas a entrega demorou 50 minutos.
+1 | Encontrei um fio de cabelo na massa. Inaceitável.
+5 | Tudo perfeito, do pedido à entrega.
+3 | Chegou rápido, mas a massa estava passada do ponto.
+2 | Atraso de 1 hora de novo. Terceira vez esse mês.
+4 | Bom custo-benefício, e a embalagem não vazou.
+2 | Demorou demais e o nhoque chegou frio.`;
+const E="Tempo de entrega",T="Temperatura",S="Sabor e qualidade",B="Embalagem",P="Pedido correto",Q="Porção e preço",A="Atendimento";
+const C=[["pos",[[S,"+"],[T,"+"]]],["neg",[[E,"-"],[T,"-"]]],["neu",[[S,"+"],[Q,"-"]]],["neg",[[P,"-"],[A,"-"]],1],["pos",[[S,"+"],[B,"+"]]],["neg",[[B,"-"]]],["neu",[[S,"+"],[E,"-"]]],["pos",[[E,"+"],[T,"+"]]],["neg",[[P,"-"]],1],["pos",[[S,"+"],[E,"+"]]],
+["neg",[[E,"-"],[S,"-"]]],["pos",[[Q,"+"]]],["neu",[[S,"-"],[Q,"-"]]],["neg",[[T,"-"],[S,"-"]]],["pos",[[S,"+"]]],["neg",[[E,"-"],[A,"-"]],1],["pos",[[B,"+"],[S,"+"],[E,"-"]]],["neg",[[P,"-"]]],["pos",[[A,"+"],[P,"+"]]],["neu",[[T,"-"],[S,"+"]]],
+["neg",[[B,"-"]]],["pos",[[S,"+"],[T,"+"],[E,"+"]]],["neg",[[Q,"-"]]],["neu",[[S,"+"],[E,"-"]]],["neg",[[S,"-"]],1],["pos",[[P,"+"],[E,"+"]]],["neu",[[E,"+"],[S,"-"]]],["neg",[[E,"-"]]],["pos",[[Q,"+"],[B,"+"]]],["neg",[[E,"-"],[T,"-"]]]];
+const EXR={acoes:[
+{acao:"Revisar o tempo de preparo nos horários de pico e ajustar o prazo prometido no app",tema:E,impacto:"alto",esforco:"baixo",porque:"Atraso é a reclamação nº 1 (8 de 30 avaliações) e 3 delas falam em mais de 1 hora."},
+{acao:"Conferir cada pedido com um checklist antes de lacrar (itens, bebidas, talheres, adicionais)",tema:P,impacto:"alto",esforco:"baixo",porque:"3 avaliações de item errado ou faltando, 2 delas com nota 1 (uma pedindo reembolso)."},
+{acao:"Reforçar higiene e padronizar o ponto da massa na cozinha",tema:S,impacto:"alto",esforco:"médio",porque:"5 reclamações de qualidade, incluindo um caso de cabelo na comida, que é risco de segurança alimentar."},
+{acao:"Trocar os potes de molho por potes com lacre e usar bolsa térmica nas massas",tema:B,impacto:"médio",esforco:"baixo",porque:"2 vazamentos e 4 queixas de comida fria ou morna."},
+{acao:"Responder o chat em até 10 minutos e avisar o cliente antes de qualquer cancelamento",tema:A,impacto:"médio",esforco:"baixo",porque:"As 2 reclamações de atendimento são de cliente sem resposta ou sem aviso."}],
+respostas:[
+{i:16,texto:"Olá! Pedimos desculpas pela espera e por não termos avisado do cancelamento. Esse não é o atendimento que queremos dar. Já ajustamos o processo para avisar o cliente assim que houver qualquer problema. Se puder, fale com a gente pelo chat para resolvermos."},
+{i:9,texto:"Olá! Sentimos muito pelos itens que faltaram. Por favor, abra a solicitação de reembolso pelo app ou chame a gente no chat que resolvemos hoje. Incluímos uma conferência extra antes de fechar cada pedido."},
+{i:25,texto:"Olá, lamentamos muito. Isso também é inaceitável para nós. Reforçamos hoje os cuidados de higiene da equipe na cozinha. Por favor, fale conosco pelo chat para entendermos o que aconteceu e resolvermos da melhor forma."}]};
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pct=(a,b)=>b?Math.round(100*a/b):0;
+let state=null,themeF="",ai=null,busy=false;
+
+function parse(txt){return txt.split(/\n+/).map(l=>l.trim()).filter(Boolean).slice(0,80).map((l,k)=>{const m=l.match(/^([1-5])\s*[|:\-–]\s*(.+)$/);return{i:k+1,nota:m?+m[1]:null,txt:m?m[2]:l}})}
+
+function aggregate(rv){
+  const n=rv.length,cnt={pos:0,neu:0,neg:0},th={};TEMAS.forEach(t=>th[t]={neg:0,pos:0});
+  rv.forEach(r=>{cnt[r.s]++;r.t.forEach(([t,p])=>th[t][p=="-"?"neg":"pos"]++)});
+  const notas=rv.filter(r=>r.nota),media=notas.length?notas.reduce((a,r)=>a+r.nota,0)/notas.length:null;
+  const top=TEMAS.slice().sort((a,b)=>th[b].neg-th[a].neg)[0];
+  return{n,cnt,th,media,top,urg:rv.filter(r=>r.u).length};
+}
+
+function render(){
+  const {rv,ag,rec,secs}=state;
+  const t=ag.th[ag.top];
+  $("finding").textContent=t.neg?`${ag.top} é a reclamação nº 1: aparece em ${t.neg} de ${ag.n} avaliações`:`Nenhuma reclamação recorrente em ${ag.n} avaliações`;
+  const manual=ag.n;
+  $("kpis").innerHTML=[
+    [`<b>${ag.n}</b><span>avaliações analisadas</span>`,""],
+    [`<b>${pct(ag.cnt.neg,ag.n)}%</b><span>negativas (${ag.cnt.neg})</span>`,"neg"],
+    [`<b>${ag.media?ag.media.toFixed(1).replace(".",","):"—"}</b><span>nota média</span>`,""],
+    [`<b>${secs?secs+" s":"~"+manual+" min"}</b><span>${secs?`análise com IA · ~${manual} min lendo à mão (estimativa)`:"lendo à mão (estimativa: 1 min cada)"}</span>`,""]
+  ].map(([h,c])=>`<div class="kpi ${c}">${h}</div>`).join("");
+  const mx=Math.max(1,...TEMAS.map(k=>Math.max(ag.th[k].neg,ag.th[k].pos)));
+  const order=TEMAS.slice().sort((a,b)=>ag.th[b].neg-ag.th[a].neg||ag.th[b].pos-ag.th[a].pos);
+  $("chart").innerHTML=order.map(k=>{const v=ag.th[k];return`<button class="drow${themeF==k?" on":""}" data-t="${esc(k)}" aria-pressed="${themeF==k}">
+    <span class="bar n">${v.neg?v.neg:""}<i style="width:${v.neg/mx*85}%"></i></span><span class="l">${esc(k)}</span><span class="bar p"><i style="width:${v.pos/mx*85}%"></i>${v.pos?v.pos:""}</span></button>`}).join("");
+  $("plan").innerHTML=(rec.acoes||[]).map(a=>`<li><div><b>${esc(a.acao)}</b><p>${esc(a.porque||"")}</p>
+    <span class="pill${/alto/.test(a.impacto)?" hi":""}">Impacto ${esc(a.impacto)}</span><span class="pill">Esforço ${esc(a.esforco)}</span><span class="pill">${esc(a.tema)}</span></div></li>`).join("")||"<li><div>Sem ações sugeridas.</div></li>";
+  const byI=Object.fromEntries(rv.map(r=>[r.i,r]));
+  $("replies").innerHTML=(rec.respostas||[]).filter(x=>byI[x.i]).map((x,k)=>`<div class="reply"><q>#${x.i}${byI[x.i].nota?" · nota "+byI[x.i].nota:""} · “${esc(byI[x.i].txt)}”</q><p id="rp${k}">${esc(x.texto)}</p><button data-c="rp${k}">Copiar resposta</button></div>`).join("")||`<p class="sub">Nenhuma avaliação urgente.</p>`;
+  table();
+}
+
+function table(){
+  const {rv}=state,fs=$("fs").value,ft=themeF;
+  const rows=rv.filter(r=>(!fs||r.s==fs)&&(!ft||r.t.some(([t])=>t==ft)));
+  $("tb").innerHTML=rows.map(r=>`<tr><td class="n">${r.i}</td><td class="n">${r.nota??"—"}</td><td>${esc(r.txt)}${r.u?' <span class="u">urgente</span>':""}</td><td><span class="s ${r.s}">${SL[r.s]}</span></td><td>${r.t.map(([t,p])=>`<span class="t ${p=="-"?"m":"p"}">${p=="-"?"−":"+"} ${esc(t)}</span>`).join("")}</td></tr>`).join("");
+  $("cnt").textContent=`${rows.length} de ${rv.length}`;
+  $("ft").value=ft;
+}
+
+function showDemo(){
+  $("inp").value=EX;
+  const rv=parse(EX).map((r,k)=>({...r,s:C[k][0],t:C[k][1],u:!!C[k][2]}));
+  themeF="";state={rv,ag:aggregate(rv),rec:EXR,secs:null};
+  $("src").textContent="Exemplo com dados fictícios · análise pré-calculada";$("st").textContent="";$("st").className="status";
+  render();
+}
+
+const P1=list=>`Você classifica avaliações de clientes de um restaurante de delivery.
+Para cada avaliação, devolva um objeto com:
+- i: o número da avaliação
+- s: "pos", "neu" ou "neg"
+- t: lista de pares [tema, "+" ou "-"] usando SOMENTE estes temas: ${TEMAS.join("; ")}. "+" = elogio, "-" = reclamação. Só inclua temas citados.
+- u: true se o restaurante deve responder com urgência (segurança alimentar, cobrança ou reembolso, item faltando, pedido cancelado); senão false.
+Responda apenas com JSON no formato {"r":[{"i":1,"s":"neg","t":[["Tempo de entrega","-"]],"u":false}]}.
+
+Avaliações:
+${list}`;
+const P2=(stats,urg)=>`Você é consultor de restaurantes parceiros de um app de delivery.
+Números da semana (calculados em código, confie neles): ${stats}
+Avaliações urgentes ou mais negativas:
+${urg}
+Devolva apenas JSON:
+{"acoes":[{"acao":"verbo no infinitivo, concreta","tema":"um dos temas","impacto":"alto|médio|baixo","esforco":"baixo|médio|alto","porque":"1 frase citando os números"}],
+ "respostas":[{"i":número,"texto":"resposta pública cordial em português, até 60 palavras, sem prometer o que o restaurante não controla"}]}
+3 a 5 ações, da mais prioritária para a menos. Até 3 respostas.`;
+$("prompts").textContent="Chamada 1 · classificar\n\n"+P1("1. [nota 2] Demorou quase 1h20…")+"\n\n────────\n\nChamada 2 · recomendar\n\n"+P2("{…contagens por tema e sentimento…}","#4 [nota 1] Pedi nhoque e veio espaguete…");
+
+async function askJSON(p){
+  if(typeof ai.json=="function"){try{return await ai.json(p,{modelTier:"default"})}catch(e){if(e&&e.code)throw e}}
+  const r=await ai(p,{modelTier:"default"});const m=(r.text||"").match(/\{[\s\S]*\}/);if(!m)throw{message:"Resposta da IA sem JSON."};return JSON.parse(m[0]);
+}
+
+async function run(){
+  if(busy||!ai)return;const rv0=parse($("inp").value);
+  if(rv0.length<3){$("st").className="status err";$("st").textContent="Cole pelo menos 3 avaliações, uma por linha.";return}
+  busy=true;$("run").disabled=true;const t0=performance.now();
+  try{
+    $("st").className="status";$("st").textContent=`Classificando ${rv0.length} avaliações…`;
+    const list=rv0.map(r=>`${r.i}. ${r.nota?`[nota ${r.nota}] `:""}${r.txt}`).join("\n");
+    const j1=await askJSON(P1(list)),got=Object.fromEntries(((j1&&j1.r)||[]).map(x=>[x.i,x]));
+    const rv=rv0.map(r=>{const x=got[r.i]||{};return{...r,s:["pos","neu","neg"].includes(x.s)?x.s:"neu",
+      t:(Array.isArray(x.t)?x.t:[]).filter(p=>Array.isArray(p)&&TEMAS.includes(p[0])&&(p[1]=="+"||p[1]=="-")).filter((p,k,a)=>a.findIndex(q=>q[0]==p[0])==k),u:x.u===true}});
+    const ag=aggregate(rv);
+    $("st").textContent="Montando plano de ação e respostas…";
+    const stats=JSON.stringify({total:ag.n,sentimento:ag.cnt,nota_media:ag.media&&+ag.media.toFixed(2),por_tema:ag.th});
+    const worst=rv.filter(r=>r.u).concat(rv.filter(r=>!r.u&&r.s=="neg")).slice(0,6).map(r=>`#${r.i} ${r.nota?`[nota ${r.nota}] `:""}${r.txt}`).join("\n")||"(nenhuma)";
+    let rec={acoes:[],respostas:[]};
+    try{const j2=await askJSON(P2(stats,worst));rec={acoes:Array.isArray(j2.acoes)?j2.acoes.slice(0,5):[],respostas:Array.isArray(j2.respostas)?j2.respostas.slice(0,3):[]}}
+    catch(e){$("st").className="status err";$("st").textContent="A classificação deu certo, mas o plano não foi gerado. Tente de novo."}
+    themeF="";state={rv,ag,rec,secs:Math.max(1,Math.round((performance.now()-t0)/1000))};
+    $("src").textContent="Suas avaliações · análise feita agora pela IA";
+    if(!$("st").classList.contains("err"))$("st").textContent=`Pronto em ${state.secs} s.`;
+    render();
+  }catch(e){
+    $("st").className="status err";
+    $("st").textContent=e&&e.code=="rate_limited"?"Muitas análises seguidas. Espere um pouco e tente de novo.":e&&e.code=="not_granted"?"A análise ao vivo não foi autorizada nesta visualização. O exemplo continua disponível.":"Não foi possível analisar agora. Tente de novo em instantes.";
+  }finally{busy=false;$("run").disabled=!ai}
+}
+
+$("ft").innerHTML+=TEMAS.map(t=>`<option>${esc(t)}</option>`).join("");
+$("run").addEventListener("click",run);
+$("demo").addEventListener("click",showDemo);
+$("clr").addEventListener("click",()=>{$("inp").value="";$("inp").focus()});
+$("inp").addEventListener("input",()=>{if(ai)$("src").textContent="Texto alterado · clique em Analisar com IA"});
+$("fs").addEventListener("change",table);
+$("ft").addEventListener("change",e=>{themeF=e.target.value;render()});
+$("chart").addEventListener("click",e=>{const b=e.target.closest(".drow");if(!b)return;themeF=themeF==b.dataset.t?"":b.dataset.t;render()});
+$("replies").addEventListener("click",async e=>{const b=e.target.closest("button[data-c]");if(!b)return;try{await navigator.clipboard.writeText($(b.dataset.c).textContent);b.textContent="Copiada"}catch(_){b.textContent="Selecione o texto e copie"}});
+showDemo();
+(async()=>{try{ai=window.claude&&window.claude.use?await window.claude.use("sample"):null}catch(_){ai=null}
+  const b=$("run");if(ai){b.disabled=false;b.textContent="Analisar com IA"}else{b.hidden=true;$("st").textContent="Versão pública: mostra uma análise de exemplo já processada pela IA. A análise ao vivo chama o Claude (veja os prompts em “Como funciona”)."}})();
+}
+</script>
+</body>
+</html>
